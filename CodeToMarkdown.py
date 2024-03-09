@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter import ttk
 import json
+import pyperclip
 
 def select_directory():
     global selected_directory
@@ -59,15 +60,35 @@ def collect_code():
 
     output_file = os.path.join(output_directory, output_filename)
 
+    collected_code = ""
+    for file_path in selected_files:
+        file_name = os.path.basename(file_path)
+        collected_code += f"<{file_name}>\n```\n"
+        with open(file_path, "r") as f:
+            code = f.read()
+            collected_code += code + "\n```\n\n"
+
     with open(output_file, "w") as output:
-        for file_path in selected_files:
-            file_name = os.path.basename(file_path)
-            output.write(f"<{file_name}>\n```\n")
-            with open(file_path, "r") as f:
-                code = f.read()
-                output.write(code + "\n```\n\n")
+        output.write(collected_code)
 
     messagebox.showinfo("Success", "Code collected and saved successfully.")
+
+def copy_to_clipboard():
+    selected_files = [selected_file_tree.item(item)["values"][0] for item in selected_file_tree.get_children()]
+    if not selected_files:
+        messagebox.showwarning("Warning", "No files selected.")
+        return
+
+    collected_code = ""
+    for file_path in selected_files:
+        file_name = os.path.basename(file_path)
+        collected_code += f"<{file_name}>\n```\n"
+        with open(file_path, "r") as f:
+            code = f.read()
+            collected_code += code + "\n```\n\n"
+
+    pyperclip.copy(collected_code)
+    messagebox.showinfo("Success", "Code copied to clipboard.")
 
 def save_profile():
     profile_name = profile_entry.get()
@@ -181,6 +202,10 @@ select_save_location_button.pack(side=tk.LEFT)
 # Create and pack the collect code button
 collect_button = tk.Button(input_frame, text="Collect Code", command=collect_code)
 collect_button.pack(pady=10, anchor=tk.W)
+
+# Create and pack the copy to clipboard button
+copy_button = tk.Button(input_frame, text="Copy to Clipboard", command=copy_to_clipboard)
+copy_button.pack(pady=5, anchor=tk.W)
 
 # Create and pack the profile entry and save button
 profile_frame = tk.Frame(input_frame)
